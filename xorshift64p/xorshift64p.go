@@ -1,6 +1,10 @@
 package xorshift64p
 
-import "math/rand"
+import (
+	"math/rand"
+
+	"github.com/shogo82148/randsrc/xorshift64"
+)
 
 var _ rand.Source = (*Source)(nil)
 var _ rand.Source64 = (*Source)(nil)
@@ -29,8 +33,9 @@ func (s *Source) Int63() int64 {
 
 // Seed implements math/rand.Source.
 func (s *Source) Seed(seed int64) {
-	s.a = uint64(seed)
-	s.b = 1
+	src := xorshift64.New(uint64(seed))
+	s.a = src.Uint64()
+	s.b = src.Uint64()
 }
 
 // Uint64 implements math/rand.Source64
