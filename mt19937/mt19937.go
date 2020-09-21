@@ -13,8 +13,6 @@ const (
 	_LowerMask = 0x7fffffff // least significant r bits
 )
 
-var mag01 = [2]uint32{0, _MatrixA}
-
 var _ rand.Source = (*Source)(nil)
 var _ rand.Source64 = (*Source)(nil)
 
@@ -45,23 +43,25 @@ func (s *Source) Int63() int64 {
 // Uint32 returns pseudo-random uint32 values in the range [0, 1<<32).
 func (s *Source) Uint32() uint32 {
 	var y uint32
+	mt := s.mt[:]
 	if s.mti >= len(s.mt) {
 		// generate N words at one time
+		var mag01 = [2]uint32{0, _MatrixA}
 		var kk int
 		for ; kk < _N-_M; kk++ {
-			y = (s.mt[kk] & _UpperMask) | (s.mt[kk+1] & _LowerMask)
+			y = (mt[kk] & _UpperMask) | (mt[kk+1] & _LowerMask)
 			s.mt[kk] = s.mt[kk+_M] ^ (y >> 1) ^ mag01[y%2]
 		}
 		for ; kk < _N-1; kk++ {
-			y = (s.mt[kk] & _UpperMask) | (s.mt[kk+1] & _LowerMask)
-			s.mt[kk] = s.mt[kk+(_M-_N)] ^ (y >> 1) ^ mag01[y%2]
+			y = (mt[kk] & _UpperMask) | (mt[kk+1] & _LowerMask)
+			mt[kk] = mt[kk+(_M-_N)] ^ (y >> 1) ^ mag01[y&1]
 		}
-		y = (s.mt[_N-1] & _UpperMask) | (s.mt[0] & _LowerMask)
-		s.mt[_N-1] = s.mt[_M-1] ^ (y >> 1) ^ mag01[y%2]
+		y = (mt[_N-1] & _UpperMask) | (mt[0] & _LowerMask)
+		mt[_N-1] = mt[_M-1] ^ (y >> 1) ^ mag01[y&1]
 		s.mti = 0
 	}
 
-	y = s.mt[s.mti]
+	y = mt[s.mti]
 	s.mti++
 
 	// Tempering

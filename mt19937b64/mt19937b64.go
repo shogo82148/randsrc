@@ -24,8 +24,6 @@ const (
 	_LM      = 0x7FFFFFFF         // Least significant 31 bits
 )
 
-var mag01 = [2]uint64{0, _MatrixA}
-
 var _ rand.Source = (*Source)(nil)
 var _ rand.Source64 = (*Source)(nil)
 
@@ -95,24 +93,26 @@ func (s *Source) SeedBySlice(initKey []uint64) {
 func (s *Source) Uint64() uint64 {
 	var x uint64
 
+	mt := s.mt[:]
 	if s.mti >= _NN {
 		// generate NN words at one time
+		var mag01 = [2]uint64{0, _MatrixA}
 		var i int
 		for i = 0; i < _NN-_MM; i++ {
-			x = (s.mt[i] & _UM) | (s.mt[i+1] & _LM)
-			s.mt[i] = s.mt[i+_MM] ^ (x >> 1) ^ mag01[x%2]
+			x = (mt[i] & _UM) | (mt[i+1] & _LM)
+			mt[i] = mt[i+_MM] ^ (x >> 1) ^ mag01[x&1]
 		}
 		for ; i < _NN-1; i++ {
-			x = (s.mt[i] & _UM) | (s.mt[i+1] & _LM)
-			s.mt[i] = s.mt[i+(_MM-_NN)] ^ (x >> 1) ^ mag01[x%2]
+			x = (mt[i] & _UM) | (mt[i+1] & _LM)
+			mt[i] = mt[i+(_MM-_NN)] ^ (x >> 1) ^ mag01[x&1]
 		}
-		x = (s.mt[_NN-1] & _UM) | (s.mt[0] & _LM)
-		s.mt[_NN-1] = s.mt[_MM-1] ^ (x >> 1) ^ mag01[x%2]
+		x = (mt[_NN-1] & _UM) | (mt[0] & _LM)
+		mt[_NN-1] = mt[_MM-1] ^ (x >> 1) ^ mag01[x&1]
 
 		s.mti = 0
 	}
 
-	x = s.mt[s.mti]
+	x = mt[s.mti]
 	s.mti++
 
 	x ^= (x >> 29) & 0x5555555555555555
