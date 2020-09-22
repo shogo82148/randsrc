@@ -25,7 +25,7 @@ var _ rand.Source64 = (*Source)(nil)
 
 // Source is a random source using xoroshiro128++ algorithm.
 //
-// Go port of http://prng.di.unimi.it/xoroshiro128pplus.c
+// Go port of http://prng.di.unimi.it/xoroshiro128plusplus.c
 type Source struct {
 	state [2]uint64
 }
