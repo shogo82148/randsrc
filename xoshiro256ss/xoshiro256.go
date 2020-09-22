@@ -1,3 +1,15 @@
+/*
+Package xoshiro256ss is xoshiro256** 1.0, one of our all-purpose, rock-solid
+generators. It has excellent (sub-ns) speed, a state (256 bits) that is
+large enough for any parallel application, and it passes all tests we
+are aware of.
+
+For generating just floating-point numbers, xoshiro256+ is even faster.
+
+The state must be seeded so that it is not everywhere zero. If you have
+a 64-bit seed, we suggest to seed a splitmix64 generator and use its
+output to fill s.
+*/
 package xoshiro256ss
 
 import (
@@ -12,8 +24,7 @@ var _ rand.Source64 = (*Source)(nil)
 
 // Source is a random source using xoshiro256** algorithm.
 //
-// http://prng.di.unimi.it/
-// http://prng.di.unimi.it/xoshiro256starstar.c
+// Go port of http://prng.di.unimi.it/xoshiro256starstar.c
 type Source struct {
 	state [4]uint64
 }
