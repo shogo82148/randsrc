@@ -27,7 +27,7 @@ func ExampleSource() {
 	src := xoshiro512ss.New([8]uint64{1})
 	r := rand.New(src)
 	for i := 0; i < 10; i++ {
-		fmt.Println(r.Int())
+		fmt.Println(r.Int63())
 	}
 	//Output:
 	// 0

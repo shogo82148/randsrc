@@ -27,7 +27,7 @@ func ExampleSource() {
 	src := splitmix64.New(1)
 	r := rand.New(src)
 	for i := 0; i < 10; i++ {
-		fmt.Println(r.Int())
+		fmt.Println(r.Int63())
 	}
 	//Output:
 	// 5225608189600411232

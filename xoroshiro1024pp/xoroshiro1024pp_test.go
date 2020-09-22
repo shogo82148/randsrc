@@ -28,7 +28,7 @@ func ExampleSource() {
 	src.Seed(1)
 	r := rand.New(&src)
 	for i := 0; i < 10; i++ {
-		fmt.Println(r.Int())
+		fmt.Println(r.Int63())
 	}
 	//Output:
 	// 3170740057973009359

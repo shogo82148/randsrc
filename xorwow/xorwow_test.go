@@ -27,7 +27,7 @@ func ExampleSource() {
 	src := xorwow.New(1, 2, 3, 4, 5)
 	r := rand.New(src)
 	for i := 0; i < 10; i++ {
-		fmt.Println(r.Int())
+		fmt.Println(r.Int63())
 	}
 	//Output:
 	// 778389808681292
