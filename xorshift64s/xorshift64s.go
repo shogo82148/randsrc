@@ -22,7 +22,7 @@ func New(state uint64) *Source {
 
 // Int63 implements math/rand.Source.
 func (s *Source) Int63() int64 {
-	x := s.Uint64() & 0x7FFFFFFFFFFFFFFF
+	x := s.Uint64() >> 1
 	return int64(x)
 }
 

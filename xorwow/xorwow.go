@@ -33,7 +33,7 @@ func New(a, b, c, d, e uint32) *Source {
 
 // Int63 implements math/rand.Source.
 func (s *Source) Int63() int64 {
-	x := int64(s.uint32()&0x7FFFFFFF) << 32
+	x := int64(s.uint32()>>1) << 32
 	x += int64(s.uint32())
 	return x
 }
