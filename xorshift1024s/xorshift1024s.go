@@ -3,7 +3,7 @@ package xorshift1024s
 import (
 	"math/rand"
 
-	"github.com/shogo82148/randsrc/xorshift64"
+	"github.com/shogo82148/randsrc/splitmix64"
 )
 
 var _ rand.Source = (*Source)(nil)
@@ -42,7 +42,7 @@ func (s *Source) Int63() int64 {
 
 // Seed implements math/rand.Source.
 func (s *Source) Seed(seed int64) {
-	src := xorshift64.New(uint64(seed))
+	src := splitmix64.New(uint64(seed))
 	for i := range s.state {
 		s.state[i] = src.Uint64()
 	}
