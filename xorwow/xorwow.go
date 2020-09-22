@@ -38,7 +38,8 @@ func (s *Source) Int63() int64 {
 	return x
 }
 
-func (s *Source) uint32() uint32 {
+// Uint32 returns pseudo-random uint32 values in the range [0, 1<<32).
+func (s *Source) Uint32() uint32 {
 	t, u := s.e, s.a
 	s.e, s.d, s.c, s.b = s.d, s.c, s.b, s.a
 	t ^= t >> 2
@@ -65,7 +66,7 @@ func (s *Source) Seed(seed int64) {
 
 // Uint64 implements math/rand.Source64
 func (s *Source) Uint64() uint64 {
-	x := uint64(s.uint32()) << 32
-	x += uint64(s.uint32())
+	x := uint64(s.Uint32()) << 32
+	x += uint64(s.Uint32())
 	return x
 }
