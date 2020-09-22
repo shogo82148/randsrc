@@ -36,6 +36,11 @@ type Source struct {
 // mat1, mat2, and tmat are a parameter set that needs to be well chosen.
 // the precalculated parameter sets are available at https://github.com/jj1bdx/tinymtdc-longbatch
 func New(mat1, mat2, tmat uint32, status [4]uint32) *Source {
+	var zero [4]uint32
+	status[0] &= mask
+	if status == zero {
+		status = [...]uint32{'T', 'I', 'N', 'Y'}
+	}
 	return &Source{
 		status: status,
 		mat1:   mat1,
@@ -94,6 +99,7 @@ func (s *Source) Seed(seed int64) {
 		s.status[i&3] ^= uint32(i) + 1812433253*(s.status[(i-1)&3]^(s.status[(i-1)&3]>>30))
 	}
 	var zero [4]uint32
+	s.status[0] &= mask
 	if s.status == zero {
 		s.status = [4]uint32{'T', 'I', 'N', 'Y'}
 	}
@@ -102,8 +108,72 @@ func (s *Source) Seed(seed int64) {
 	}
 }
 
+func iniFunc1(x uint32) uint32 {
+	return (x ^ (x >> 27)) * 1664525
+}
+
+func iniFunc2(x uint32) uint32 {
+	return (x ^ (x >> 27)) * 1566083941
+}
+
 // SeedBySlice initializes the state by initKey.
 func (s *Source) SeedBySlice(initKey []uint32) {
+	const lag = 1
+	const mid = 1
+	const size = 4
+	var state [4]uint32
+	count := 8
+	if len(initKey)+1 > 8 {
+		count = len(initKey) + 1
+	}
+
+	state[0] = 0
+	state[1] = s.mat1
+	state[2] = s.mat2
+	state[3] = s.tmat
+
+	r := iniFunc1(state[0] ^ state[mid%size] ^ state[(size-1)%size])
+	state[mid%size] += r
+	r += uint32(len(initKey))
+	state[(mid+lag)%size] += r
+	state[0] = r
+	count--
+
+	var i, j int
+	for i, j = 1, 0; j < count && j < len(initKey); j++ {
+		r := iniFunc1(state[i%size] ^ state[(i+mid)%size] ^ state[(i+size-1)%size])
+		state[(i+mid)%size] += r
+		r += initKey[j] + uint32(i)
+		state[(i+mid+lag)%size] += r
+		state[i%size] = r
+		i = (i + 1) % size
+	}
+	for ; j < count; j++ {
+		r := iniFunc1(state[i%size] ^ state[(i+mid)%size] ^ state[(i+size-1)%size])
+		state[(i+mid)%size] += r
+		r += uint32(i)
+		state[(i+mid+lag)%size] += r
+		state[i%size] = r
+		i = (i + 1) % size
+	}
+	for j = 0; j < size; j++ {
+		r := iniFunc2(state[i%size] + state[(i+mid)%size] + state[(i+size-1)%size])
+		state[(i+mid)%size] ^= r
+		r -= uint32(i)
+		state[(i+mid+lag)%size] ^= r
+		state[i%size] = r
+		i = (i + 1) % size
+	}
+
+	var zero [4]uint32
+	state[0] &= mask
+	if state == zero {
+		state = [...]uint32{'T', 'I', 'N', 'Y'}
+	}
+	s.status = state
+	for i := 0; i < 8; i++ {
+		s.next()
+	}
 }
 
 // Uint64 implements math/rand.Source64

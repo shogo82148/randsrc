@@ -84,8 +84,71 @@ func (s *Source) Seed(seed int64) {
 	}
 }
 
+func iniFunc1(x uint64) uint64 {
+	return (x ^ (x >> 59)) * 2173292883993
+}
+
+func iniFunc2(x uint64) uint64 {
+	return (x ^ (x >> 59)) * 58885565329898161
+}
+
 // SeedBySlice initializes the state by initKey.
-func (s *Source) SeedBySlice(initKey []uint32) {
+func (s *Source) SeedBySlice(initKey []uint64) {
+	const lag = 1
+	const mid = 1
+	const size = 4
+	var state [4]uint64
+	count := 8
+	if len(initKey)+1 > 8 {
+		count = len(initKey) + 1
+	}
+
+	state[0] = 0
+	state[1] = uint64(s.mat1)
+	state[2] = uint64(s.mat2)
+	state[3] = s.tmat
+
+	r := iniFunc1(state[0] ^ state[mid%size] ^ state[(size-1)%size])
+	state[mid%size] += r
+	r += uint64(len(initKey))
+	state[(mid+lag)%size] += r
+	state[0] = r
+	count--
+
+	var i, j int
+	for i, j = 1, 0; j < count && j < len(initKey); j++ {
+		r := iniFunc1(state[i%size] ^ state[(i+mid)%size] ^ state[(i+size-1)%size])
+		state[(i+mid)%size] += r
+		r += initKey[j] + uint64(i)
+		state[(i+mid+lag)%size] += r
+		state[i%size] = r
+		i = (i + 1) % size
+	}
+	for ; j < count; j++ {
+		r := iniFunc1(state[i%size] ^ state[(i+mid)%size] ^ state[(i+size-1)%size])
+		state[(i+mid)%size] += r
+		r += uint64(i)
+		state[(i+mid+lag)%size] += r
+		state[i%size] = r
+		i = (i + 1) % size
+	}
+	for j = 0; j < size; j++ {
+		r := iniFunc2(state[i%size] + state[(i+mid)%size] + state[(i+size-1)%size])
+		state[(i+mid)%size] ^= r
+		r -= uint64(i)
+		state[(i+mid+lag)%size] ^= r
+		state[i%size] = r
+		i = (i + 1) % size
+	}
+
+	s.status[0] = state[0] ^ state[1]
+	s.status[1] = state[2] ^ state[3]
+
+	var zero [2]uint64
+	s.status[0] &= mask
+	if s.status == zero {
+		s.status = [2]uint64{'T', 'M'}
+	}
 }
 
 // Uint64 implements math/rand.Source64
