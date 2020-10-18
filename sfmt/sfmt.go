@@ -317,8 +317,7 @@ func func2(x uint32) uint32 {
 
 // This function certificate the period of 2^{MEXP}
 func (s *Source) periodCertification() {
-	var inner uint64
-	inner = (s.state[0][0] & s.param.Parity1) ^ (s.state[0][1] & s.param.Parity2)
+	inner := (s.state[0][0] & s.param.Parity1) ^ (s.state[0][1] & s.param.Parity2)
 	if bits.OnesCount64(inner)%2 != 0 {
 		// check OK
 		return
@@ -394,17 +393,17 @@ func (s *Source) dorecursion(a, b, c, d w128t) w128t {
 type w128t [2]uint64
 
 // lshift returns x << n
-func (x w128t) lshift(n uint) w128t {
-	return w128t{
-		x[0] << (n * 8),
-		(x[1] << (n * 8)) | (x[0] >> (64 - n*8)),
-	}
-}
+// func (x w128t) lshift(n uint) w128t {
+// 	return w128t{
+// 		x[0] << (n * 8),
+// 		(x[1] << (n * 8)) | (x[0] >> (64 - n*8)),
+// 	}
+// }
 
 // rshift returns x >> n
-func (x w128t) rshift(n uint) w128t {
-	return w128t{
-		(x[0] >> (n * 8)) | (x[1] << (64 - n*8)),
-		x[1] >> (n * 8),
-	}
-}
+// func (x w128t) rshift(n uint) w128t {
+// 	return w128t{
+// 		(x[0] >> (n * 8)) | (x[1] << (64 - n*8)),
+// 		x[1] >> (n * 8),
+// 	}
+// }
