@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -41,5 +42,21 @@ func TestSource_Uint64(t *testing.T) {
 				}
 			}		
 		})
+	}
+}
+
+func BenchmarkInt63(b *testing.B) {
+	src := New(Param216091)
+	src.Seed(4321)
+	for i := 0; i < b.N; i++ {
+		runtime.KeepAlive(src.Int63())
+	}
+}
+
+func BenchmarkUint64(b *testing.B) {
+	src := New(Param216091)
+	src.Seed(4321)
+	for i := 0; i < b.N; i++ {
+		runtime.KeepAlive(src.Uint64())
 	}
 }
