@@ -240,7 +240,79 @@ func (s *Source) Seed(seed int64) {
 }
 
 // SeedBySlice initializes the state by initKey.
-func (s *Source) SeedBySlice(initKey []uint64) {
+func (s *Source) SeedBySlice(initKey []uint32) {
+	size := len(s.state) * 4
+	state := make([]uint32, size)
+	var lag int
+	switch {
+	case size >= 623:
+		lag = 11
+	case size >= 68:
+		lag = 7
+	case size >= 39:
+		lag = 5
+	default:
+		lag = 3
+	}
+	mid := (size - lag) / 2
+
+	for i := range state {
+		state[i] = 0x8b8b8b8b
+	}
+
+	count := size
+	if len(initKey)+1 > count {
+		count = len(initKey) + 1
+	}
+
+	r := func1(state[0] ^ state[mid] ^ state[size-1])
+	state[mid] += r
+	r += uint32(len(initKey))
+	state[mid+lag] += r
+	state[0] = r
+
+	count--
+	i, j := 1, 0
+	for ; j < count && j < len(initKey); j++ {
+		r = func1(state[i] ^ state[(i+mid)%size] ^ state[((i+size-1)%size)])
+		state[(i+mid)%size] += r
+		r += initKey[j] + uint32(i)
+		state[(i+mid+lag)%size] += r
+		state[i] = r
+		i = (i + 1) % size
+	}
+	for ; j < count; j++ {
+		r = func1(state[i] ^ state[(i+mid)%size] ^ state[((i+size-1)%size)])
+		state[(i+mid)%size] += r
+		r += uint32(i)
+		state[(i+mid+lag)%size] += r
+		state[i] = r
+		i = (i + 1) % size
+	}
+	for j := 0; j < size; j++ {
+		r = func2(state[i] + state[(i+mid)%size] + state[((i+size-1)%size)])
+		state[(i+mid)%size] ^= r
+		r -= uint32(i)
+		state[(i+mid+lag)%size] ^= r
+		state[i] = r
+		i = (i + 1) % size
+	}
+
+	for i := range s.state {
+		s.state[i][0] = (uint64(state[i*4+1]) << 32) | uint64(state[i*4+0])
+		s.state[i][1] = (uint64(state[i*4+3]) << 32) | uint64(state[i*4+2])
+	}
+
+	s.periodCertification()
+	s.idx = len(s.state) * 2
+}
+
+func func1(x uint32) uint32 {
+	return (x ^ (x >> 27)) * 1664525
+}
+
+func func2(x uint32) uint32 {
+	return (x ^ (x >> 27)) * 1566083941
 }
 
 // This function certificate the period of 2^{MEXP}
@@ -318,7 +390,7 @@ func (x w128t) lshift(n uint) w128t {
 
 func (x w128t) rshift(n uint) w128t {
 	return w128t{
-		(x[0] >> (n * 8))  | (x[1] << (64 - n*8)),
+		(x[0] >> (n * 8)) | (x[1] << (64 - n*8)),
 		x[1] >> (n * 8),
 	}
 }
