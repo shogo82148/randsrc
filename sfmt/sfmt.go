@@ -371,16 +371,29 @@ func (s *Source) Uint64() uint64 {
 }
 
 func (s *Source) dorecursion(a, b, c, d w128t) w128t {
+	// inlining by hand, because it is too deep for Go to optimize function calls.
+	// x := a.lshift(s.param.SL2 * 8)
+	x := w128t{
+		a[0] << (s.param.SL2 * 8),
+		(a[1] << (s.param.SL2 * 8)) | (a[0] >> (64 - s.param.SL2*8)),
+	}
+
+	// y := b.rshift(s.s.param.SR2)
+	y := w128t{
+		(c[0] >> (s.param.SR2 * 8)) | (c[1] << (64 - s.param.SR2*8)),
+		c[1] >> (s.param.SR2 * 8),
+	}
+
 	var r w128t
-	x := a.lshift(s.param.SL2)
-	y := c.rshift(s.param.SR2)
 	r[0] = a[0] ^ x[0] ^ ((b[0] >> s.param.SR1) & s.param.MSK1) ^ y[0] ^ ((d[0] << s.param.SL1) & s.maskL)
 	r[1] = a[1] ^ x[1] ^ ((b[1] >> s.param.SR1) & s.param.MSK2) ^ y[1] ^ ((d[1] << s.param.SL1) & s.maskL)
 	return r
 }
 
+// w128t is unsigned 128-bit integer type.
 type w128t [2]uint64
 
+// lshift returns x << n
 func (x w128t) lshift(n uint) w128t {
 	return w128t{
 		x[0] << (n * 8),
@@ -388,6 +401,7 @@ func (x w128t) lshift(n uint) w128t {
 	}
 }
 
+// rshift returns x >> n
 func (x w128t) rshift(n uint) w128t {
 	return w128t{
 		(x[0] >> (n * 8)) | (x[1] << (64 - n*8)),
