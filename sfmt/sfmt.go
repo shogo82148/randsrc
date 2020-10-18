@@ -235,6 +235,7 @@ func (s *Source) Seed(seed int64) {
 			uint64(c) | (uint64(d) << 32),
 		}
 	}
+	s.periodCertification()
 	s.idx = len(s.state) * 2
 }
 
